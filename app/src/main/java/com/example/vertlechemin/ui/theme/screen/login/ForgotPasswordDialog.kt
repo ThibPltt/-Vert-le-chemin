@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -17,7 +18,31 @@ fun ForgotPasswordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Réinitialiser le mot de passe") },
+        containerColor = Color(0xFF795C5F), // Couleur de fond personnalisée
+        titleContentColor = Color.White,
+        textContentColor = Color.White,
+        confirmButton = {
+            TextButton(onClick = {
+                if (newPassword.isBlank() || confirmPassword.isBlank()) {
+                    error = "Veuillez remplir les deux champs."
+                } else if (newPassword != confirmPassword) {
+                    error = "Les mots de passe ne correspondent pas."
+                } else {
+                    error = null
+                    onResetPassword(newPassword, confirmPassword)
+                }
+            }) {
+                Text("Réinitialiser", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Annuler", color = Color.White)
+            }
+        },
+        title = {
+            Text("Réinitialiser le mot de passe")
+        },
         text = {
             Column(
                 modifier = Modifier
@@ -48,25 +73,6 @@ fun ForgotPasswordDialog(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                if (newPassword.isBlank() || confirmPassword.isBlank()) {
-                    error = "Veuillez remplir les deux champs."
-                } else if (newPassword != confirmPassword) {
-                    error = "Les mots de passe ne correspondent pas."
-                } else {
-                    error = null
-                    onResetPassword(newPassword, confirmPassword)
-                }
-            }) {
-                Text("Réinitialiser")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Annuler")
             }
         }
     )

@@ -1,7 +1,10 @@
 package com.example.vertlechemin.ui.theme.screen.login
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -9,15 +12,12 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.border
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -57,7 +57,11 @@ fun LoginScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF3F6634))
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,7 +75,10 @@ fun LoginScreen(
             Image(
                 painter = painterResource(id = R.drawable.vert_le_chemin_logo),
                 contentDescription = "Logo",
-                modifier = Modifier.size(120.dp)
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -79,14 +86,15 @@ fun LoginScreen(
             // Titre
             Text(
                 text = "Se connecter",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Lien vers inscription
             TextButton(onClick = onNavigateToRegister) {
-                Text("Pas de compte ? S'inscrire")
+                Text("Pas de compte ? S'inscrire", color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -144,7 +152,7 @@ fun LoginScreen(
 
             // Mot de passe oublié
             TextButton(onClick = { showForgotPasswordDialog = true }) {
-                Text("Mot de passe oublié ?")
+                Text("Mot de passe oublié ?", color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -187,7 +195,7 @@ fun LoginScreen(
             ForgotPasswordDialog(
                 onDismiss = { showForgotPasswordDialog = false },
                 onResetPassword = { newPass, _ ->
-                    // Ajoute ici la logique de réinitialisation réelle si nécessaire
+                    // Logique à ajouter
                     showForgotPasswordDialog = false
                 }
             )
