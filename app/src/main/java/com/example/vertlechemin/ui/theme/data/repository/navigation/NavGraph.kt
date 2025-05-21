@@ -20,6 +20,7 @@ import com.example.vertlechemin.ui.theme.screen.login.favoris.FavorisScreen
 import com.example.vertlechemin.ui.theme.screen.login.parameters.ParametersScreen
 import com.example.vertlechemin.ui.theme.screen.login.register.RegisterScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.TrajetScreen
+import com.example.vertlechemin.ui.theme.screen.login.trajet.DestinationScreen
 
 // Navigation destinations
 sealed class Screen(val route: String) {
@@ -30,6 +31,7 @@ sealed class Screen(val route: String) {
     object Trajet : Screen("trajet")
     object Favoris : Screen("favoris")
     object Parameters : Screen("parameters")
+    object Destination : Screen("destination")
 }
 
 // ViewModel Hilt
@@ -104,11 +106,13 @@ fun AppNavigation(
                 }
             )
         }
+
         composable(Screen.Trajet.route) {
             TrajetScreen(
                 onNavigateToTrajet = { navController.navigate(Screen.Trajet.route) },
                 onNavigateToFavoris = { navController.navigate(Screen.Favoris.route) },
-                onNavigateToParameters = { navController.navigate(Screen.Parameters.route) }
+                onNavigateToParameters = { navController.navigate(Screen.Parameters.route) },
+                onNavigateToDestination = { navController.navigate(Screen.Destination.route) }
             )
         }
 
@@ -127,6 +131,15 @@ fun AppNavigation(
                 onNavigateToParameters = { navController.navigate(Screen.Parameters.route) }
             )
         }
-    }
 
+        composable(Screen.Destination.route) {
+            DestinationScreen(
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+    }
 }
