@@ -64,8 +64,7 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation("androidx.compose.material:material-icons-extended")
-
-
+    implementation("org.osmdroid:osmdroid-android:6.1.13")
 
 
 
