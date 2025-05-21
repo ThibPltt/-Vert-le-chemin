@@ -16,14 +16,20 @@ import javax.inject.Inject
 import com.example.vertlechemin.ui.theme.data.repository.UserRepository
 import com.example.vertlechemin.ui.theme.screen.login.home.HomeScreen
 import com.example.vertlechemin.ui.theme.screen.login.LoginScreen
+import com.example.vertlechemin.ui.theme.screen.login.favoris.FavorisScreen
+import com.example.vertlechemin.ui.theme.screen.login.parameters.ParametersScreen
 import com.example.vertlechemin.ui.theme.screen.login.register.RegisterScreen
+import com.example.vertlechemin.ui.theme.screen.login.trajet.TrajetScreen
 
 // Navigation destinations
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
-    object ForgotPassword : Screen("forgot_password") // nouveau
+    object ForgotPassword : Screen("forgot_password")
+    object Trajet : Screen("trajet")
+    object Favoris : Screen("favoris")
+    object Parameters : Screen("parameters")
 }
 
 // ViewModel Hilt
@@ -85,8 +91,30 @@ fun AppNavigation(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                },
+
+                onNavigateToTrajet = {
+                    navController.navigate(Screen.Trajet.route)
+                },
+                onNavigateToFavoris = {
+                    navController.navigate(Screen.Favoris.route)
+                },
+                onNavigateToParameters = {
+                    navController.navigate(Screen.Parameters.route)
                 }
             )
         }
+        composable(Screen.Trajet.route) {
+            TrajetScreen()
+        }
+
+        composable(Screen.Favoris.route) {
+            FavorisScreen()
+        }
+
+        composable(Screen.Parameters.route) {
+            ParametersScreen()
+        }
     }
+
 }

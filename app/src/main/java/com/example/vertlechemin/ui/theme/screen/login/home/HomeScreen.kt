@@ -2,6 +2,7 @@ package com.example.vertlechemin.ui.theme.screen.login.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -16,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,12 +39,19 @@ class HomeViewModel @Inject constructor(
 
 @Composable
 fun HomeScreen(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToTrajet: () -> Unit,
+    onNavigateToFavoris: () -> Unit,
+    onNavigateToParameters: () -> Unit
 ) {
     Scaffold(
-        containerColor = Color(0xFF3F6634),
+        containerColor = Color(0xFF3F6634), // Couleur verte du background
         bottomBar = {
-            BottomNavigationBar()
+            BottomNavigationBar(
+                onNavigateToTrajet = onNavigateToTrajet,
+                onNavigateToFavoris = onNavigateToFavoris,
+                onNavigateToParameters = onNavigateToParameters
+            )
         }
     ) { padding ->
         Column(
@@ -100,27 +109,35 @@ fun HomeScreen(
 }
 
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar(
+    onNavigateToTrajet: () -> Unit,
+    onNavigateToFavoris: () -> Unit,
+    onNavigateToParameters: () -> Unit
+) {
+
     NavigationBar(
+        modifier = Modifier
+            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
         containerColor = Color(0xFFDAB87C) // Beige/orangé
+
     ) {
         NavigationBarItem(
-            icon = { Icon(Icons.Default.DirectionsCar, contentDescription = "Trajet") },
-            label = { Text("Trajet", color = Color.White) },
-            selected = true,
-            onClick = { /* TODO */ }
+            icon = { Icon(Icons.Default.DirectionsCar, contentDescription = "Trajet", tint = Color.Black) },
+            label = { Text("Trajet", color = Color.Black) },
+            selected = false,
+            onClick = onNavigateToTrajet
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Favoris") },
-            label = { Text("Favoris", color = Color.White) },
+            icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Favoris", tint = Color.Black) },
+            label = { Text("Favoris", color = Color.Black) },
             selected = false,
-            onClick = { /* TODO */ }
+            onClick = onNavigateToFavoris
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Settings, contentDescription = "Profil") },
-            label = { Text("Profil", color = Color.White) },
+            icon = { Icon(Icons.Default.Settings, contentDescription = "Profil", tint = Color.Black) },
+            label = { Text("Profil", color = Color.Black) },
             selected = false,
-            onClick = { /* TODO */ }
+            onClick = onNavigateToParameters
         )
     }
 }
