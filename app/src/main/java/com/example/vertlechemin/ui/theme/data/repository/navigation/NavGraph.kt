@@ -105,15 +105,27 @@ fun AppNavigation(
             )
         }
         composable(Screen.Trajet.route) {
-            TrajetScreen()
+            TrajetScreen(
+                onNavigateToTrajet = { navController.navigate(Screen.Trajet.route) },
+                onNavigateToFavoris = { navController.navigate(Screen.Favoris.route) },
+                onNavigateToParameters = { navController.navigate(Screen.Parameters.route) }
+            )
         }
 
         composable(Screen.Favoris.route) {
-            FavorisScreen()
+            FavorisScreen(
+                onNavigateToTrajet = { navController.navigate(Screen.Trajet.route) },
+                onNavigateToFavoris = { navController.navigate(Screen.Favoris.route) },
+                onNavigateToParameters = { navController.navigate(Screen.Parameters.route) }
+            )
         }
 
         composable(Screen.Parameters.route) {
-            ParametersScreen()
+            ParametersScreen(
+                onNavigateToTrajet = { navController.navigate(Screen.Trajet.route) },
+                onNavigateToFavoris = { navController.navigate(Screen.Favoris.route) },
+                onNavigateToParameters = { navController.navigate(Screen.Parameters.route) }
+            )
         }
     }
 
