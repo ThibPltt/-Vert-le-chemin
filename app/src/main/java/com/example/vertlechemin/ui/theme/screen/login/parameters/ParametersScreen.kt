@@ -1,9 +1,9 @@
 package com.example.vertlechemin.ui.theme.screen.login.parameters
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,7 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +32,7 @@ fun ParametersScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    var showLanguageDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color(0xFF3F6634),
@@ -116,8 +117,22 @@ fun ParametersScreen(
 
             Divider(color = Color.Black, thickness = 1.dp)
 
-            ParameterRow(Icons.Default.Language, "Langue")
-            Divider(color = Color.Black, thickness = 1.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showLanguageDialog = true }
+                    .padding(vertical = 12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Language,
+                    contentDescription = "Langue",
+                    tint = Color.White,
+                    modifier = Modifier.size(36.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Langue", color = Color.White)
+            }
 
             // Déconnexion
             Row(
@@ -143,6 +158,16 @@ fun ParametersScreen(
 
             Divider(color = Color.Black, thickness = 1.dp)
         }
+    }
+
+    if (showLanguageDialog) {
+        LanguagePopupDialog(
+            onDismiss = { showLanguageDialog = false },
+            onLanguageSelected = { lang ->
+                // Gérer le changement de langue ici
+                showLanguageDialog = false
+            }
+        )
     }
 }
 
