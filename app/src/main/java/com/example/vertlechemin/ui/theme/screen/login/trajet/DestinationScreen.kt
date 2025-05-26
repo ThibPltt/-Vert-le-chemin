@@ -3,6 +3,8 @@ package com.example.vertlechemin.ui.theme.screen.login.trajet
 import android.content.Context
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -25,11 +27,14 @@ import org.osmdroid.views.overlay.Marker
 
 @Composable
 fun DestinationScreen(
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onNavigateToFavoris: () -> Unit,
+    onNavigateToParameters: () -> Unit,
+    onStartRace: () -> Unit
 ) {
     val context = LocalContext.current
 
-    // Configuration de osmdroid (obligatoire)
+    // Configuration obligatoire de osmdroid
     LaunchedEffect(Unit) {
         Configuration.getInstance().load(
             context,
@@ -42,8 +47,8 @@ fun DestinationScreen(
         bottomBar = {
             DestinationBottomNavigationBar(
                 onNavigateToTrajet = onNavigateToHome,
-                onNavigateToFavoris = onNavigateToHome,
-                onNavigateToParameters = onNavigateToHome
+                onNavigateToFavoris = onNavigateToFavoris,
+                onNavigateToParameters = onNavigateToParameters
             )
         }
     ) { innerPadding ->
@@ -51,12 +56,56 @@ fun DestinationScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            Box(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Destination",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SearchBarPlaceholder()
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Carte OpenStreetMap dans une Box bien limitée
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 200.dp, max = 500.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
                 OpenStreetMap()
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            ButtonCommencer(onStartRace = onStartRace)
+
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
+}
+
+@Composable
+fun SearchBarPlaceholder() {
+    TextField(
+        value = "",
+        onValueChange = {},
+        placeholder = { Text("Rechercher une destination") },
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp)),
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color.White,
+            focusedContainerColor = Color.White,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent
+        )
+    )
 }
 
 @Composable
@@ -70,12 +119,12 @@ fun OpenStreetMap() {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
 
-                // Position et zoom sur Le Mans
+                // Position initiale sur Le Mans
                 controller.setZoom(14.5)
                 val leMans = GeoPoint(48.0061, 0.1996)
                 controller.setCenter(leMans)
 
-                // Marqueur sur Le Mans
+                // Marqueur Le Mans
                 val marker = Marker(this).apply {
                     position = leMans
                     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
@@ -90,6 +139,23 @@ fun OpenStreetMap() {
             }
         }
     )
+}
+
+@Composable
+fun ButtonCommencer(onStartRace: () -> Unit) {
+    Button(
+        onClick = onStartRace,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFFDAB87C),
+            contentColor = Color.Black
+        )
+    ) {
+        Text("Commencer la course", style = MaterialTheme.typography.titleMedium)
+    }
 }
 
 @Composable

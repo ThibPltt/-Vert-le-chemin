@@ -21,8 +21,8 @@ import com.example.vertlechemin.ui.theme.screen.login.parameters.ParametersScree
 import com.example.vertlechemin.ui.theme.screen.login.register.RegisterScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.TrajetScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.DestinationScreen
+import com.example.vertlechemin.ui.theme.screen.login.trajet.NavigationScreen
 
-// Navigation destinations
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -32,9 +32,9 @@ sealed class Screen(val route: String) {
     object Favoris : Screen("favoris")
     object Parameters : Screen("parameters")
     object Destination : Screen("destination")
+    object Navigation : Screen("navigation")
 }
 
-// ViewModel Hilt
 @HiltViewModel
 class NavViewModel @Inject constructor(
     private val userRepository: UserRepository
@@ -94,7 +94,6 @@ fun AppNavigation(
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
-
                 onNavigateToTrajet = {
                     navController.navigate(Screen.Trajet.route)
                 },
@@ -138,6 +137,33 @@ fun AppNavigation(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                },
+                onNavigateToFavoris = {
+                    navController.navigate(Screen.Favoris.route)
+                },
+                onNavigateToParameters = {
+                    navController.navigate(Screen.Parameters.route)
+                },
+                onStartRace = {
+                    navController.navigate(Screen.Navigation.route)
+                }
+            )
+        }
+
+
+
+        composable(Screen.Navigation.route) {
+            NavigationScreen(
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onNavigateToFavoris = {
+                    navController.navigate(Screen.Favoris.route)
+                },
+                onNavigateToParameters = {
+                    navController.navigate(Screen.Parameters.route)
                 }
             )
         }
