@@ -171,6 +171,20 @@ fun FinishScreen(
                     .fillMaxWidth()
                     .height(200.dp)
             )
+
+            // Bouton retour à l'accueil
+            Button(
+                onClick = { onNavigateToHome() },
+                modifier = Modifier.fillMaxWidth(0.6f),
+                shape = MaterialTheme.shapes.medium,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFDAB87C),
+                    contentColor = Color.Black
+                )
+                
+                ) {
+                Text(text = "Retour à l'accueil")
+            }
         }
     }
 }
