@@ -163,8 +163,13 @@ fun LoginScreen(
                 enabled = loginState !is LoginState.Loading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-            ) {
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFDAB87C),
+                    contentColor = Color.Black
+            )
+            )
+            {
                 if (loginState is LoginState.Loading) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,

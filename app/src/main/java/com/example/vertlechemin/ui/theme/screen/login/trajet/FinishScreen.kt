@@ -181,7 +181,7 @@ fun FinishScreen(
                     containerColor = Color(0xFFDAB87C),
                     contentColor = Color.Black
                 )
-                
+
                 ) {
                 Text(text = "Retour à l'accueil")
             }

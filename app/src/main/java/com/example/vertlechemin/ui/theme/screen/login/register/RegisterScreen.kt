@@ -239,8 +239,14 @@ fun RegisterScreen(
                 enabled = registerState !is RegisterState.Loading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-            ) {
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFDAB87C),
+                    contentColor = Color.Black
+
+                )
+            )
+            {
                 if (registerState is RegisterState.Loading) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
