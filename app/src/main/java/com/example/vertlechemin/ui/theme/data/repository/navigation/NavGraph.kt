@@ -128,6 +128,7 @@ fun AppNavigation(
 
         composable(Screen.Parameters.route) {
             ParametersScreen(
+                navController = navController,
                 onNavigateToTrajet = { navController.navigate(Screen.Trajet.route) },
                 onNavigateToFavoris = { navController.navigate(Screen.Favoris.route) },
                 onNavigateToParameters = { navController.navigate(Screen.Parameters.route) }
