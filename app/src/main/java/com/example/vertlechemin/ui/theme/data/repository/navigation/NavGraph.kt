@@ -22,6 +22,8 @@ import com.example.vertlechemin.ui.theme.screen.login.register.RegisterScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.TrajetScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.DestinationScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.NavigationScreen
+import com.example.vertlechemin.ui.theme.screen.login.trajet.FinishScreen
+
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -33,6 +35,7 @@ sealed class Screen(val route: String) {
     object Parameters : Screen("parameters")
     object Destination : Screen("destination")
     object Navigation : Screen("navigation")
+    object Finish : Screen("finish")
 }
 
 @HiltViewModel
@@ -150,8 +153,7 @@ fun AppNavigation(
             )
         }
 
-
-
+        // Navigation avec redirection automatique vers FinishScreen après 10s
         composable(Screen.Navigation.route) {
             NavigationScreen(
                 onNavigateToHome = {
@@ -164,7 +166,30 @@ fun AppNavigation(
                 },
                 onNavigateToParameters = {
                     navController.navigate(Screen.Parameters.route)
+                },
+                onFinishScreen = {
+                    navController.navigate(Screen.Finish.route)
                 }
+            )
+        }
+
+        composable(Screen.Finish.route) {
+            FinishScreen(
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onNavigateToFavoris = {
+                    navController.navigate(Screen.Favoris.route)
+                },
+                onNavigateToParameters = {
+                    navController.navigate(Screen.Parameters.route)
+                },
+                onFinishScreen = {
+                    navController.navigate(Screen.Finish.route)
+                }
+
             )
         }
     }

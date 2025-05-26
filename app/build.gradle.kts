@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     implementation(libs.androidx.navigation.compose.android)
     implementation(libs.androidx.animation.core.lint)
+    implementation(libs.androidx.media3.exoplayer)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -65,6 +66,11 @@ dependencies {
     kapt(libs.hilt.compiler)
     implementation("androidx.compose.material:material-icons-extended")
     implementation("org.osmdroid:osmdroid-android:6.1.13")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-gif:2.5.0")
+    implementation("com.google.accompanist:accompanist-drawablepainter:0.35.0-alpha")
+
+
 
 
 
