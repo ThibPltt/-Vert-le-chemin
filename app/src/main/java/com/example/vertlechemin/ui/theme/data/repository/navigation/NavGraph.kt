@@ -9,6 +9,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.navigation.NavBackStackEntry
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -26,7 +29,6 @@ import com.example.vertlechemin.ui.theme.screen.login.trajet.FinishScreen
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.StateFlow
 
-
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
@@ -36,7 +38,9 @@ sealed class Screen(val route: String) {
     object Favoris : Screen("favoris")
     object Parameters : Screen("parameters")
     object Destination : Screen("destination")
-    object Navigation : Screen("navigation")
+    object Navigation : Screen("navigation/{destinationLat}/{destinationLon}") {
+        fun createRoute(lat: Double, lon: Double) = "navigation/$lat/$lon"
+    }
     object Finish : Screen("finish")
 }
 
@@ -75,7 +79,7 @@ fun AppNavigation(
                 },
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
-                },
+                }
             )
         }
 
@@ -150,14 +154,25 @@ fun AppNavigation(
                 onNavigateToParameters = {
                     navController.navigate(Screen.Parameters.route)
                 },
-                onStartRace = {
-                    navController.navigate(Screen.Navigation.route)
+                onStartRace = { destinationLat, destinationLon ->
+                    navController.navigate(Screen.Navigation.createRoute(destinationLat, destinationLon))
                 }
             )
         }
 
-        composable(Screen.Navigation.route) {
+        composable(
+            route = Screen.Navigation.route,
+            arguments = listOf(
+                navArgument("destinationLat") { type = NavType.StringType },
+                navArgument("destinationLon") { type = NavType.StringType }
+            )
+        ) { backStackEntry: NavBackStackEntry ->
+            val destinationLat = backStackEntry.arguments?.getString("destinationLat")?.toDoubleOrNull() ?: 0.0
+            val destinationLon = backStackEntry.arguments?.getString("destinationLon")?.toDoubleOrNull() ?: 0.0
+
             NavigationScreen(
+                destinationLat = destinationLat,
+                destinationLon = destinationLon,
                 onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }

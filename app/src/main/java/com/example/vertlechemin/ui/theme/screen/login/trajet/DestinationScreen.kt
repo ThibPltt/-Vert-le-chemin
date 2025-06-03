@@ -1,7 +1,11 @@
 package com.example.vertlechemin.ui.theme.screen.login.trajet
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.view.ViewGroup
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +24,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -31,12 +41,33 @@ fun DestinationScreen(
     onNavigateToHome: () -> Unit,
     onNavigateToFavoris: () -> Unit,
     onNavigateToParameters: () -> Unit,
-    onStartRace: () -> Unit
+    onStartRace: (Double, Double) -> Unit
 ) {
     val context = LocalContext.current
 
-    // Configuration obligatoire osmdroid
-    LaunchedEffect(Unit) {
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted -> hasLocationPermission = granted }
+    )
+
+    // Demande la permission si non accordée
+    LaunchedEffect(key1 = Unit) {
+        if (!hasLocationPermission) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    // Configuration OSM
+    LaunchedEffect(key1 = Unit) {
         Configuration.getInstance().load(
             context,
             context.getSharedPreferences("osm_prefs", Context.MODE_PRIVATE)
@@ -59,6 +90,24 @@ fun DestinationScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCity by remember { mutableStateOf<City?>(null) }
     var mapView by remember { mutableStateOf<MapView?>(null) }
+    var userLocation by remember { mutableStateOf<GeoPoint?>(null) }
+
+    // Récupérer la dernière position connue dès que permission OK
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            try {
+                val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+                val location = fusedLocationClient.lastLocation.await()
+                location?.let {
+                    userLocation = GeoPoint(it.latitude, it.longitude)
+                    mapView?.controller?.setCenter(userLocation)
+                    mapView?.controller?.setZoom(15.0)
+                }
+            } catch (e: Exception) {
+                // Gestion simple d'erreur : log, toast, ou rien
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Color(0xFF3F6634),
@@ -82,10 +131,8 @@ fun DestinationScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White
             )
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Barre de recherche
             TextField(
                 value = searchQuery,
                 onValueChange = { newValue ->
@@ -109,7 +156,6 @@ fun DestinationScreen(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Liste filtrée des villes
             val filteredCities = if (searchQuery.isEmpty()) emptyList() else
                 cities.filter {
                     it.name.lowercase().startsWith(searchQuery.lowercase())
@@ -130,18 +176,26 @@ fun DestinationScreen(
                                 selectedCity = city
                                 searchQuery = city.name
 
-                                // Centre la carte sur la ville choisie
                                 mapView?.let { mv ->
                                     mv.controller.setZoom(14.5)
                                     mv.controller.setCenter(city.location)
-
                                     mv.overlays.clear()
-                                    val marker = Marker(mv).apply {
+
+                                    val cityMarker = Marker(mv).apply {
                                         position = city.location
                                         setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                                         title = city.name
                                     }
-                                    mv.overlays.add(marker)
+                                    mv.overlays.add(cityMarker)
+
+                                    userLocation?.let { loc ->
+                                        val userMarker = Marker(mv).apply {
+                                            position = loc
+                                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                            title = "Ma position"
+                                        }
+                                        mv.overlays.add(userMarker)
+                                    }
                                     mv.invalidate()
                                 }
                             }
@@ -154,7 +208,6 @@ fun DestinationScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Carte OpenStreetMap
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -168,18 +221,9 @@ fun DestinationScreen(
                             setTileSource(TileSourceFactory.MAPNIK)
                             setMultiTouchControls(true)
 
-                            // Centre initial sur Le Mans
                             val leMans = GeoPoint(48.0061, 0.1996)
                             controller.setZoom(14.5)
                             controller.setCenter(leMans)
-
-                            // Marqueur Le Mans
-                            val marker = Marker(this).apply {
-                                position = leMans
-                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                title = "Le Mans"
-                            }
-                            overlays.add(marker)
 
                             layoutParams = ViewGroup.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -187,13 +231,44 @@ fun DestinationScreen(
                             )
                             mapView = this
                         }
+                    },
+                    update = { mv ->
+                        mv.overlays.clear()
+
+                        selectedCity?.let { city ->
+                            val cityMarker = Marker(mv).apply {
+                                position = city.location
+                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                title = city.name
+                            }
+                            mv.overlays.add(cityMarker)
+                        }
+
+                        userLocation?.let { loc ->
+                            val userMarker = Marker(mv).apply {
+                                position = loc
+                                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                title = "Ma position"
+                            }
+                            mv.overlays.add(userMarker)
+                            mv.controller.setCenter(loc)
+                            mv.controller.setZoom(15.0)
+                        }
+
+                        mv.invalidate()
                     }
                 )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            ButtonCommencer(onStartRace = onStartRace)
+            ButtonCommencer(
+                onStartRace = {
+                    selectedCity?.let {
+                        onStartRace(it.location.latitude, it.location.longitude)
+                    }
+                }
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
         }

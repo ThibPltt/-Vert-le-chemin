@@ -1,5 +1,10 @@
 package com.example.vertlechemin.ui.theme.screen.login
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,12 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.vertlechemin.R
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 @Composable
 fun LoginScreen(
@@ -54,6 +63,45 @@ fun LoginScreen(
         if (loginState is LoginState.Error) {
             errorMessage = (loginState as LoginState.Error).message
             showErrorDialog = true
+        }
+    }
+
+    val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    var locationPermissionGranted by remember { mutableStateOf(false) }
+    var currentLatitude by remember { mutableStateOf<Double?>(null) }
+    var currentLongitude by remember { mutableStateOf<Double?>(null) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            locationPermissionGranted = granted
+            if (granted) {
+                getLastLocation(fusedLocationClient) { lat, lon ->
+                    currentLatitude = lat
+                    currentLongitude = lon
+                }
+            }
+        }
+    )
+
+    // Demande la permission **à chaque ouverture de l’écran**
+    LaunchedEffect(Unit) {
+        val permissionStatus = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        locationPermissionGranted = permissionStatus
+
+        if (permissionStatus) {
+            getLastLocation(fusedLocationClient) { lat, lon ->
+                currentLatitude = lat
+                currentLongitude = lon
+            }
+        } else {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -114,7 +162,9 @@ fun LoginScreen(
                     text = emailError!!,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.align(Alignment.Start).padding(top = 4.dp, start = 8.dp)
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(top = 4.dp, start = 8.dp)
                 )
             }
 
@@ -144,7 +194,9 @@ fun LoginScreen(
                     text = passwordError!!,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.align(Alignment.Start).padding(top = 4.dp, start = 8.dp)
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(top = 4.dp, start = 8.dp)
                 )
             }
 
@@ -167,9 +219,8 @@ fun LoginScreen(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFDAB87C),
                     contentColor = Color.Black
-            )
-            )
-            {
+                )
+            ) {
                 if (loginState is LoginState.Loading) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
@@ -178,6 +229,24 @@ fun LoginScreen(
                 } else {
                     Text("Se connecter")
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Affichage localisation
+            if (locationPermissionGranted) {
+                Text(
+                    text = if (currentLatitude != null && currentLongitude != null)
+                        "Localisation : $currentLatitude, $currentLongitude"
+                    else
+                        "Récupération localisation...",
+                    color = Color.White
+                )
+            } else {
+                Text(
+                    text = "Permission localisation non accordée",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
 
@@ -200,10 +269,28 @@ fun LoginScreen(
             ForgotPasswordDialog(
                 onDismiss = { showForgotPasswordDialog = false },
                 onResetPassword = { newPass, _ ->
-                    // Logique à ajouter
+                    // TODO: Logique reset mot de passe
                     showForgotPasswordDialog = false
                 }
             )
         }
     }
+}
+
+@SuppressLint("MissingPermission")
+private fun getLastLocation(
+    fusedLocationClient: FusedLocationProviderClient,
+    onLocationReceived: (latitude: Double?, longitude: Double?) -> Unit
+) {
+    fusedLocationClient.lastLocation
+        .addOnSuccessListener { location ->
+            if (location != null) {
+                onLocationReceived(location.latitude, location.longitude)
+            } else {
+                onLocationReceived(null, null)
+            }
+        }
+        .addOnFailureListener {
+            onLocationReceived(null, null)
+        }
 }
