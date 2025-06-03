@@ -61,6 +61,7 @@ dependencies {
 
     // Material icons extended
     implementation("androidx.compose.material:material-icons-extended:1.6.4")
+    implementation("androidx.compose.material3:material3:1.1.0")
 
     // OSMDroid
     implementation("org.osmdroid:osmdroid-android:6.1.14")

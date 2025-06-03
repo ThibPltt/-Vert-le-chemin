@@ -16,13 +16,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.vertlechemin.ui.theme.data.repository.navigation.Screen
+
+enum class PopupType {
+    NONE,
+    PARAMETERS,
+    LANGUAGE
+}
 
 @Composable
 fun ParametersScreen(
@@ -32,7 +37,7 @@ fun ParametersScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
-    var showLanguageDialog by remember { mutableStateOf(false) }
+    var currentPopup by remember { mutableStateOf(PopupType.NONE) }
 
     Scaffold(
         containerColor = Color(0xFF3F6634),
@@ -78,7 +83,23 @@ fun ParametersScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            ParameterRow(Icons.Default.Info, "Informations personnelles")
+            // "Informations personnelles"
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { currentPopup = PopupType.PARAMETERS }
+                    .padding(vertical = 12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Informations personnelles",
+                    tint = Color.White,
+                    modifier = Modifier.size(36.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Informations personnelles", color = Color.White)
+            }
             Divider(color = Color.Black, thickness = 1.dp)
 
             // Notifications
@@ -114,14 +135,14 @@ fun ParametersScreen(
                     fontWeight = FontWeight.Medium
                 )
             }
-
             Divider(color = Color.Black, thickness = 1.dp)
 
+            // "Langue"
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { showLanguageDialog = true }
+                    .clickable { currentPopup = PopupType.LANGUAGE }
                     .padding(vertical = 12.dp)
             ) {
                 Icon(
@@ -133,18 +154,19 @@ fun ParametersScreen(
                 Spacer(modifier = Modifier.width(16.dp))
                 Text("Langue", color = Color.White)
             }
+            Divider(color = Color.Black, thickness = 1.dp)
 
             // Déconnexion
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp)
                     .clickable {
                         navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
                         }
                     }
+                    .padding(vertical = 12.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.PowerSettingsNew,
@@ -155,38 +177,23 @@ fun ParametersScreen(
                 Spacer(modifier = Modifier.width(16.dp))
                 Text("Se déconnecter", color = Color.White)
             }
-
             Divider(color = Color.Black, thickness = 1.dp)
         }
     }
 
-    if (showLanguageDialog) {
-        LanguagePopupDialog(
-            onDismiss = { showLanguageDialog = false },
-            onLanguageSelected = { lang ->
-                // Gérer le changement de langue ici
-                showLanguageDialog = false
+    // Gestion des popups
+    when (currentPopup) {
+        PopupType.PARAMETERS -> ParametersPopupDialog(
+            onDismiss = { currentPopup = PopupType.NONE },
+        )
+        PopupType.LANGUAGE -> LanguagePopupDialog(
+            onDismiss = { currentPopup = PopupType.NONE },
+            onLanguageSelected = { languageCode ->
+                // TODO: Appliquer la langue choisie (languageCode : "fr", "en", "es", ...)
+                currentPopup = PopupType.NONE
             }
         )
-    }
-}
-
-@Composable
-fun ParameterRow(icon: ImageVector, text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = text,
-            tint = Color.White,
-            modifier = Modifier.size(36.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text, color = Color.White)
+        else -> { /* rien à afficher */ }
     }
 }
 
@@ -197,8 +204,7 @@ fun BottomNavigationBar(
     onNavigateToParameters: () -> Unit
 ) {
     NavigationBar(
-        modifier = Modifier
-            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
+        modifier = Modifier.clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
         containerColor = Color(0xFFDAB87C)
     ) {
         NavigationBarItem(
