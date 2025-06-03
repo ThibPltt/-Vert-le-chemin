@@ -1,7 +1,6 @@
 package com.example.vertlechemin.ui.theme.screen.login.home
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -10,21 +9,15 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.vertlechemin.ui.theme.data.repository.UserRepository
 import javax.inject.Inject
-
 
 class HomeViewModel @Inject constructor(
     private val userRepository: UserRepository
@@ -44,6 +37,8 @@ fun HomeScreen(
     onNavigateToFavoris: () -> Unit,
     onNavigateToParameters: () -> Unit
 ) {
+    var searchText by remember { mutableStateOf("") }
+
     Scaffold(
         containerColor = Color(0xFF3F6634), // Couleur verte du background
         bottomBar = {
@@ -87,13 +82,13 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Barre de recherche
+            // Barre de recherche avec gestion du texte
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
-                placeholder = { Text("Rechercher une destination", color = Color.Black) },
+                value = searchText,
+                onValueChange = { searchText = it },
+                placeholder = { Text("Rechercher une destination", color = Color.White.copy(alpha = 0.6f)) },
                 trailingIcon = {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
+                    Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = Color.White)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -101,7 +96,11 @@ fun HomeScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = Color.White,
                     unfocusedBorderColor = Color.White,
-                    cursorColor = Color.White
+                    cursorColor = Color.White,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedPlaceholderColor = Color.White.copy(alpha = 0.6f),
+                    unfocusedPlaceholderColor = Color.White.copy(alpha = 0.6f)
                 )
             )
         }
@@ -114,12 +113,10 @@ fun BottomNavigationBar(
     onNavigateToFavoris: () -> Unit,
     onNavigateToParameters: () -> Unit
 ) {
-
     NavigationBar(
         modifier = Modifier
             .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
         containerColor = Color(0xFFDAB87C) // Beige/orangé
-
     ) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.DirectionsCar, contentDescription = "Trajet", tint = Color.Black) },
