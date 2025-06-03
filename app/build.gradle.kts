@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt) // <-- ajoute ceci
     kotlin("kapt") // pour la génération de code
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -69,6 +70,8 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("io.coil-kt:coil-gif:2.5.0")
     implementation("com.google.accompanist:accompanist-drawablepainter:0.35.0-alpha")
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation ("com.google.firebase:firebase-auth")
 
 
 

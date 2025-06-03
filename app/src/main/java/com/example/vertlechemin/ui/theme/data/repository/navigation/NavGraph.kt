@@ -23,6 +23,8 @@ import com.example.vertlechemin.ui.theme.screen.login.trajet.TrajetScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.DestinationScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.NavigationScreen
 import com.example.vertlechemin.ui.theme.screen.login.trajet.FinishScreen
+import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.StateFlow
 
 
 sealed class Screen(val route: String) {
@@ -42,7 +44,7 @@ sealed class Screen(val route: String) {
 class NavViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
-    val isLoggedIn = userRepository.currentUser
+    val isLoggedIn: StateFlow<FirebaseUser?> = userRepository.currentUser
 }
 
 @Composable
@@ -154,7 +156,6 @@ fun AppNavigation(
             )
         }
 
-        // Navigation avec redirection automatique vers FinishScreen après 10s
         composable(Screen.Navigation.route) {
             NavigationScreen(
                 onNavigateToHome = {
@@ -190,7 +191,6 @@ fun AppNavigation(
                 onFinishScreen = {
                     navController.navigate(Screen.Finish.route)
                 }
-
             )
         }
     }
