@@ -1,1 +1,29 @@
-
+{
+  "project_info": {
+    "project_number": "299650806297",
+    "project_id": "vert--le-chemin",
+    "storage_bucket": "vert--le-chemin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:299650806297:android:dbe1e029c61db0c735b088",
+        "android_client_info": {
+          "package_name": "com.example.vertlechemin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYn3_psYf39J_TtgQh03--mmnlxsxZh5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,8 +2,8 @@ package com.example.vertlechemin.ui.theme.screen.login.trajet
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.*
 import kotlinx.coroutines.delay
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -86,65 +88,104 @@ fun decodePolyline(encoded: String): List<GeoPoint> {
     return poly
 }
 
-// --- Fonction démarrage mise à jour GPS ---
-private fun startLocationUpdates(
-    locationManager: LocationManager,
-    onLocationChanged: (Location) -> Unit
-) {
-    try {
-        locationManager.requestLocationUpdates(
-            LocationManager.GPS_PROVIDER,
-            2000L, // 2 secondes
-            5f,    // 5 mètres
-            object : LocationListener {
-                override fun onLocationChanged(loc: Location) {
-                    onLocationChanged(loc)
-                }
-                override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}
-                override fun onProviderEnabled(provider: String) {}
-                override fun onProviderDisabled(provider: String) {}
-            },
-            Looper.getMainLooper()
-        )
-    } catch (ex: SecurityException) {
-        // Permission non accordée, rien à faire ici
-    }
-}
-
-// --- Composable récupération GPS continu ---
+// --- Composable récupération GPS continue avec FusedLocationProvider ---
 @Composable
 fun getCurrentLocationContinuous(): Location? {
     val context = LocalContext.current
     var location by remember { mutableStateOf<Location?>(null) }
     val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-    // Launcher pour permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted ->
             if (granted) {
-                startLocationUpdates(locationManager) { loc -> location = loc }
+                try {
+                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    if (location == null) {
+                        startLocationUpdates(locationManager) { loc -> location = loc }
+                    }
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                }
             }
         }
     )
 
     LaunchedEffect(Unit) {
-        val permissionGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+        val permissionGranted = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) == PackageManager.PERMISSION_GRANTED
 
         if (!permissionGranted) {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
-            startLocationUpdates(locationManager) { loc -> location = loc }
+            try {
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                if (location == null) {
+                    startLocationUpdates(locationManager) { loc -> location = loc }
+                }
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!granted) {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+
+            try {
+                fusedClient.lastLocation.addOnSuccessListener { loc ->
+                    if (loc != null) {
+                        location = loc
+                    }
+                }
+
+                val locationRequest = LocationRequest.create().apply {
+                    interval = 5000
+                    fastestInterval = 2000
+                    priority = Priority.PRIORITY_HIGH_ACCURACY
+                }
+
+                fusedClient.requestLocationUpdates(
+                    locationRequest,
+                    object : LocationCallback() {
+                        override fun onLocationResult(result: LocationResult) {
+                            location = result.lastLocation
+                        }
+                    },
+                    Looper.getMainLooper()
+                )
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            }
         }
     }
 
     return location
 }
 
-// --- Écran Navigation complet ---
+private fun startLocationUpdates(locationManager: LocationManager, onLocationChanged: (Location) -> Unit) {
+    try {
+        locationManager.requestLocationUpdates(
+            LocationManager.GPS_PROVIDER,
+            5000L,
+            5f,
+            { location -> onLocationChanged(location) }
+        )
+    } catch (e: SecurityException) {
+        e.printStackTrace()
+    }
+}
+
+// --- Écran Navigation complet corrigé ---
 @Composable
 fun NavigationScreen(
     destinationLat: Double,
@@ -156,34 +197,39 @@ fun NavigationScreen(
 ) {
     val location = getCurrentLocationContinuous()
 
+    var lastUsedLocation by remember { mutableStateOf<Location?>(null) }
     var polylineEncoded by remember { mutableStateOf<String?>(null) }
     var instructions by remember { mutableStateOf<List<String>>(emptyList()) }
-    var loading by remember { mutableStateOf(true) }
+    var loading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(location, destinationLat, destinationLon) {
-        if (location == null) {
-            errorMessage = "Impossible de récupérer la position GPS"
-            loading = false
-            return@LaunchedEffect
-        }
+    // On ne relance la requête Valhalla que si on bouge assez loin (ex: 50m)
+    LaunchedEffect(location) {
+        location?.let { currentLocation ->
+            val lastLoc = lastUsedLocation
+            val distance = lastLoc?.distanceTo(currentLocation) ?: Float.MAX_VALUE
 
-        try {
-            loading = true
-            val response = getRouteFromValhalla(
-                location.latitude, location.longitude,
-                destinationLat, destinationLon
-            )
-            polylineEncoded = response.trip.shape
-            instructions = response.trip.legs.flatMap { leg ->
-                leg.maneuvers.map { it.instruction }
+            if (distance > 50f) {
+                try {
+                    loading = true
+                    errorMessage = null
+
+                    val response = getRouteFromValhalla(
+                        currentLocation.latitude, currentLocation.longitude,
+                        destinationLat, destinationLon
+                    )
+                    polylineEncoded = response.trip.shape
+                    instructions = response.trip.legs.flatMap { leg -> leg.maneuvers.map { it.instruction } }
+
+                    lastUsedLocation = currentLocation
+                    loading = false
+                } catch (e: Exception) {
+                    errorMessage = "Erreur lors de la récupération de l'itinéraire : ${e.message}"
+                    loading = false
+                }
             }
-            loading = false
-
-            delay(10_000)
-            onFinishScreen()
-        } catch (e: Exception) {
-            errorMessage = "Erreur lors de la récupération de l'itinéraire : ${e.message}"
+        } ?: run {
+            errorMessage = "Impossible de récupérer la position GPS"
             loading = false
         }
     }
@@ -203,29 +249,44 @@ fun NavigationScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (loading) {
-                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-            } else if (errorMessage != null) {
-                Text(
-                    text = errorMessage ?: "Erreur inconnue",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else {
-                MapWithRoute(polylineEncoded = polylineEncoded, modifier = Modifier.weight(1f))
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp)
-                        .padding(8.dp)
-                ) {
-                    items(instructions) { instruction ->
-                        Text(
-                            text = instruction,
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
+            when {
+                loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Color.White)
+                    }
+                }
+                errorMessage != null -> {
+                    Text(
+                        text = errorMessage ?: "Erreur inconnue",
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                else -> {
+                    MapWithRoute(
+                        polylineEncoded = polylineEncoded,
+                        userLocation = location,
+                        modifier = Modifier.weight(1f)
+                    )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                            .padding(8.dp)
+                    ) {
+                        items(instructions) { instruction ->
+                            Text(
+                                text = instruction,
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -234,7 +295,11 @@ fun NavigationScreen(
 }
 
 @Composable
-fun MapWithRoute(polylineEncoded: String?, modifier: Modifier = Modifier) {
+fun MapWithRoute(
+    polylineEncoded: String?,
+    userLocation: Location? = null,
+    modifier: Modifier = Modifier
+) {
     AndroidView(
         modifier = modifier,
         factory = { context ->
@@ -242,24 +307,38 @@ fun MapWithRoute(polylineEncoded: String?, modifier: Modifier = Modifier) {
                 setTileSource(TileSourceFactory.MAPNIK)
                 setMultiTouchControls(true)
                 controller.setZoom(14.0)
-                controller.setCenter(GeoPoint(48.8566, 2.3522)) // Paris par défaut
+                // Centrer par défaut sur Paris
+                controller.setCenter(GeoPoint(48.8566, 2.3522))
             }
         },
         update = { mapView ->
+            userLocation?.let {
+                val userGeoPoint = GeoPoint(it.latitude, it.longitude)
+                mapView.controller.setCenter(userGeoPoint)
+            }
+
             mapView.overlays.clear()
-            polylineEncoded?.let {
-                val points = decodePolyline(it)
+
+            // Ajouter la ligne du trajet
+            polylineEncoded?.let { encoded ->
+                val geoPoints = decodePolyline(encoded)
                 val polyline = Polyline().apply {
-                    setPoints(points)
-                    outlinePaint.color = android.graphics.Color.BLUE
-                    outlinePaint.strokeWidth = 8f
+                    setPoints(geoPoints)
+                    outlinePaint.color = android.graphics.Color.GREEN
+                    outlinePaint.strokeWidth = 10f
                 }
                 mapView.overlays.add(polyline)
-                if (points.isNotEmpty()) {
-                    mapView.controller.setCenter(points.first())
-                    mapView.controller.setZoom(14.0)
-                }
             }
+
+            // Ajouter le marker position utilisateur
+            userLocation?.let {
+                val overlay = org.osmdroid.views.overlay.Marker(mapView).apply {
+                    position = GeoPoint(it.latitude, it.longitude)
+                    title = "Votre position"
+                }
+                mapView.overlays.add(overlay)
+            }
+
             mapView.invalidate()
         }
     )
@@ -271,27 +350,24 @@ fun NavigationBottomNavigationBar(
     onNavigateToFavoris: () -> Unit,
     onNavigateToParameters: () -> Unit,
 ) {
-    NavigationBar(
-        containerColor = Color(0xFFDAB87C),
-        tonalElevation = 4.dp
-    ) {
+    NavigationBar(containerColor = Color(0xFF1B3614)) {
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Accueil", tint = Color.Black) },
-            label = { Text("Accueil", color = Color.Black) },
-            selected = true,
-            onClick = onNavigateToTrajet
+            selected = false,
+            onClick = onNavigateToTrajet,
+            icon = { Icon(Icons.Default.Home, contentDescription = "Accueil") },
+            label = { Text("Accueil") }
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Favoris", tint = Color.Black) },
-            label = { Text("Favoris", color = Color.Black) },
             selected = false,
-            onClick = onNavigateToFavoris
+            onClick = onNavigateToFavoris,
+            icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Favoris") },
+            label = { Text("Favoris") }
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Settings, contentDescription = "Paramètres", tint = Color.Black) },
-            label = { Text("Paramètres", color = Color.Black) },
             selected = false,
-            onClick = onNavigateToParameters
+            onClick = onNavigateToParameters,
+            icon = { Icon(Icons.Default.Settings, contentDescription = "Paramètres") },
+            label = { Text("Paramètres") }
         )
     }
 }
