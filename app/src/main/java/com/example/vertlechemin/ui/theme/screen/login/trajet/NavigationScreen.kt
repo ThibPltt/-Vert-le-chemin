@@ -234,6 +234,12 @@ fun NavigationScreen(
         }
     }
 
+    // ✅ Timer de 7 secondes avant de passer à l'écran suivant
+    LaunchedEffect(key1 = true) {
+        delay(7000)
+        onFinishScreen()
+    }
+
     Scaffold(
         containerColor = Color(0xFF3F6634),
         bottomBar = {
