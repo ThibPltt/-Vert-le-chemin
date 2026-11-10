@@ -1,115 +1,71 @@
-# 🌿 Vert le Chemin
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ThibPltt/ThibPltt/main/assets/repos/Vert-le-chemin-dark.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/ThibPltt/ThibPltt/main/assets/repos/Vert-le-chemin-light.svg"><img src="https://raw.githubusercontent.com/ThibPltt/ThibPltt/main/assets/repos/Vert-le-chemin-light.svg" width="100%" alt="Vert le Chemin, 2024 to 2025: Android app that estimates the CO2 of daily trips. Kotlin, Jetpack Compose, ENSIM."></picture>
 
-**Vert le Chemin** est une application mobile conçue pour sensibiliser les utilisateurs à l’impact environnemental de leurs déplacements quotidiens. 
-Elle estime les émissions de CO2 en fonction du mode de transport choisi et propose des alternatives plus vertueuses pour réduire l’empreinte carbone.
+# Vert le Chemin
 
-## 📱 Objectif
+Android app that estimates the CO₂ of daily trips and suggests greener means of transport.
 
-Offrir une solution interactive et sociale pour :
-- Estimer les émissions de CO2 d’un trajet.
-- Comparer ces émissions à d'autres activités du quotidien.
-- Proposer des trajets optimisés selon le mode de transport (vélo, voiture, marche…).
-- Sauvegarder et partager ses trajets pour encourager un changement collectif.
+| At a glance | |
+|---|---|
+| **Dates** | 2024 – 2025 |
+| **Context** | mobile app · course project · ENSIM |
+| **Technologies** | Android · Kotlin · Jetpack Compose · Firebase |
 
-## 🎯 Public visé
+## Problem
 
-Utilisateurs se rendant chaque jour à leur lieu de travail ou d’étude (ex: Le Mans Université), souhaitant adopter un mode de transport plus respectueux de l’environnement.
+Make people who commute every day to work or study (e.g. Le Mans Université) aware of the environmental impact of their trips, and help them switch to a more environmentally friendly way of travelling.
 
----
+## Role
 
-## 🧠 Fonctionnalités clés
+Course project, ENSIM 4th year (Interaction Personnes-Systèmes): specification, mock-ups and the Kotlin prototype.
 
-- 🌍 Navigation interactive basée sur la localisation GPS.
-- 🚲 Choix de différents modes de transport.
-- 📊 Estimations de CO2 basées sur les données officielles de l’ADEME.
-- ⭐ Sauvegarde des trajets et ajout aux favoris.
-- 🔄 Partage de trajets entre utilisateurs.
-- 🔐 Respect de la confidentialité et conformité RGPD.
+## Decisions
 
----
+- Estimate the CO₂ emissions of a trip from official ADEME data, for the chosen means of transport.
+- Compare these emissions with everyday activities, so that the figure speaks to the user.
+- Suggest routes optimised for each means of transport (bike, car, walking…), on OpenStreetMap.
+- Save and share trips to encourage collective change, with privacy by design (GDPR).
 
-## 🛠️ Stack technique
+## Result
 
-| Domaine        | Technologie            |
-|----------------|------------------------|
-| Langage        | Kotlin (Android)       |
-| UI/UX          | Figma (Low-fi & High-fi) |
-| Données        | Base de données sécurisée |
-| Navigation     | API GPS Android        |
+Specification, functional tree and low-fi mock-ups done; a Kotlin prototype with sign-in, registration and password reset, language and settings, destination choice, route display on the map, navigation and favourites screens.
 
----
+## Features
 
-## 🚧 État d’avancement (au 16/04/2025)
+- 🌍 Interactive navigation based on GPS location
+- 🚲 Choice between several means of transport
+- 📊 CO₂ estimates based on ADEME data
+- ⭐ Saved trips and favourites
+- 🔄 Trips shared between users
+- 🔐 Privacy by design and GDPR compliance
 
-- ✅ Cahier des charges rédigé
-- ✅ Maquette Low-fi
-- ✅ Arbre des tâches
-- 🔜 Maquette High-fi
-- 🔜 MVP en cours de développement
+## Tech
 
----
+| Area | Technology |
+|---|---|
+| Language | Kotlin (Android, min SDK 28, target SDK 35) |
+| UI | Jetpack Compose, Material 3, Navigation Compose; mock-ups in Figma (low-fi and high-fi) |
+| Architecture | MVVM (ViewModels), Hilt dependency injection, Kotlin coroutines |
+| Accounts | Firebase Authentication |
+| Maps and routing | osmdroid (OpenStreetMap), Valhalla routing API through Retrofit, Google Play location services |
 
-## 🔬 Protocole d’expérimentation
+## User testing protocol
 
-### Hypothèses
-- L'utilisateur choisit son moyen de transport selon l’impact environnemental.
-- Il est influencé par la comparaison d’émissions.
-- Il utilise les fonctionnalités de sauvegarde et de partage.
-- L'application est perçue comme ergonomique (SUS > 72).
+**Hypotheses:** users choose their means of transport according to its environmental impact; they are influenced by the comparison of emissions; they use the save and share features; the app is perceived as usable (SUS > 72).
 
-### Fonctionnalités testées
-- Sélection de transport.
-- Navigation.
-- Affichage d’estimations de CO2.
-- Gestion des favoris.
-- Partage social.
+**Features tested:** choice of transport, navigation, CO₂ estimates, favourites, sharing.
 
----
-
-## 📈 Business Model envisagé (futur)
-
-- Monétisation par publicité légère : ~0,36€/1000 affichages.
-- Exemple : 1000 utilisateurs actifs/jour = ~648€/an.
-
----
-
-## 🧩 Arborescence fonctionnelle (extrait)
-
-- Authentification (login, création, mot de passe oublié)
-- Choix du mode de transport
-- Calcul du trajet
-- Estimation des émissions
-- Affichage de la carte
-- Sauvegarde / favoris / partage
-
----
-
-## 🔐 Confidentialité
-
-Les données personnelles de l'utilisateur (âge, nom, géolocalisation) sont stockées de manière sécurisée et cryptée. L'utilisateur peut à tout moment supprimer son compte selon le RGPD.
-
----
-
-## 📚 Glossaire
-
-- **BDD** : Base de Données  
-- **GPS** : Global Positioning System  
-- **MVP** : Minimum Viable Product  
-- **RGPD** : Règlement Général sur la Protection des Données  
-
----
-
-## 🤝 Contributeurs
-
-- **Thibaut PLATET** – Étudiant 4A IPS – ENSIM
-
----
-
-## 📦 Installation
-
-Pour cloner ce projet en local :
+## Run it
 
 ```bash
 git clone https://github.com/ThibPltt/-Vert-le-chemin.git
-cd -Vert-le-chemin
+```
 
+Open the folder in Android Studio, let Gradle sync, then run the `app` configuration on a device or an emulator (Android 9 or later).
+
+**Author:** Thibaut Platet · ENSIM · [thibautplatet.com](https://thibautplatet.com/en/)
+
+<details>
+<summary>🇫🇷 En bref</summary>
+
+Application Android (Kotlin) qui estime les émissions de CO₂ d'un trajet quotidien à partir des données de l'ADEME et propose des alternatives plus vertueuses. Projet de 4e année à l'ENSIM : cahier des charges, maquettes et prototype avec connexion, choix de la destination, calcul et affichage de l'itinéraire, navigation.
+</details>
